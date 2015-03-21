@@ -21,6 +21,10 @@ var stattoServer = statto({
   interval : 15 * 1000, // 15s
 })
 
+stattoServer.on('listening', function(port) {
+  console.log('Stats server is listening on port %s', port)
+})
+
 stattoServer.on('stats', function(timestamp, stats) {
   console.log('timestamp :', timestamp)
   console.log('stats :', stats)
