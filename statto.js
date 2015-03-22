@@ -69,6 +69,11 @@ function createStatsServer(opts, callback) {
     var key  = parts[1]
     var val  = parseInt(parts[2], 10)
 
+    // if there is no key, log it as bad
+    if ( !key ) {
+      return meta.bad++
+    }
+
     if ( type === 'c' ) {
       // this is a counter
       if ( !counters[key] ) {
