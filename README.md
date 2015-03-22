@@ -56,8 +56,9 @@ See the output get logged every 15 seconds.
 
 Written by [Andrew Chilton](http://chilts.org/) - [Twitter](https://twitter.com/andychilton).
 
-Written for [Tynio](https://tyn.io/) so we can talk to all RackspaceCloud services. Please check us out for hosting
-your blog/microblog/shortlink service with stats built-in. "Create, Shorten and Share Almost Anything!"
+Written for [Tynio](https://tyn.io/) so we can use a statsd-like daemon in a much easier way. Our use-case involves a
+stats callback which writes each file to Rackspace's Cloud Files, which are aggregated in a separate process elsewhere.
+ie. the stats daemon is not where the hard work is, it's pretty easy.
 
 ## License ##
 
