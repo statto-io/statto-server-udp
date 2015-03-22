@@ -1,6 +1,6 @@
 # Statto #
 
-Like statsd, but different.
+A statsd-like library (not daemon) - easier to configure and run.
 
 ## Metrics ##
 
