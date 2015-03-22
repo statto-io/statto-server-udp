@@ -14,11 +14,22 @@ function getPeriod(interval) {
   return new Date(period)
 }
 
-function createStatsServer(opts) {
-  var ee = new events.EventEmitter()
+function createStatsServer(opts, callback) {
+  // check which options we have been given
+  if ( !opts ) {
+    opts = {}
+  }
+  if ( typeof opts === 'function') {
+    callback = opts
+    opts = {}
+  }
+  callback = callback || function() {}
 
   var port     = opts.port     || 9526
   var interval = opts.interval || 15 * 1000 // default: 15s
+
+  // to emit 'stats' messages
+  var ee = new events.EventEmitter()
 
   // remember which period we're currently in
   var currentPeriod
@@ -33,6 +44,12 @@ function createStatsServer(opts) {
   }
 
   var server = dgram.createSocket('udp4')
+
+  server.on("error", function (err) {
+    // console.log("server error:\n" + err.stack)
+    server.close()
+    callback(err)
+  })
 
   server.on('message', function (msg, rinfo) {
     ee.emit('debug', util.format('Received %d bytes from %s:%d', msg.length, rinfo.address, rinfo.port))
@@ -57,7 +74,7 @@ function createStatsServer(opts) {
       if ( !counters[key] ) {
         counters[key] = 0
       }
-      counters[key] = val
+      counters[key] += val
     }
     else if ( type === 'g' ) {
       // gauge
@@ -77,7 +94,7 @@ function createStatsServer(opts) {
   })
 
   server.bind(port, function() {
-    ee.emit('listening', port)
+    callback(null, port)
   })
 
   function flush() {

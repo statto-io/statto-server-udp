@@ -16,12 +16,12 @@ There are 4 different metrics types:
 ```js
 var statto = require('statto')
 
-var stattoServer = statto({
-  port     : 9526,
-  interval : 15 * 1000, // 15s
-})
+var opts = {
+  port     : 9526,      // default: 9526
+  interval : 30 * 1000, // 30s. default: 15s
+}
 
-stattoServer.on('listening', function(port) {
+var stattoServer = statto(opts, function(err, port) {
   console.log('Stats server is listening on port %s', port)
 })
 
