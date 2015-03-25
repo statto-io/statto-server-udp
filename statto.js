@@ -38,6 +38,7 @@ function createStatsServer(opts, callback) {
   var counters = {}
   var timers   = {}
   var gauges   = {}
+  var sets     = {}
   var meta = {
     received : 0,
     bad      : 0,
@@ -67,7 +68,7 @@ function createStatsServer(opts, callback) {
 
     var type = parts[0]
     var key  = parts[1]
-    var val  = parseInt(parts[2], 10)
+    var val = type === 's' ? parts[2] : parseInt(parts[2], 10)
 
     // if there is no key, log it as bad
     if ( !key ) {
@@ -92,6 +93,16 @@ function createStatsServer(opts, callback) {
       }
       timers[key].push(val)
     }
+    else if ( type === 's' ) {
+      // set
+      if ( !sets[key] ) {
+        sets[key] = {}
+      }
+      if ( !sets[key][val] ) {
+        sets[key][val] = 0
+      }
+      sets[key][val] += 1
+    }
     else {
       // ee.emit('bad', op)
       meta.bad++
@@ -110,6 +121,7 @@ function createStatsServer(opts, callback) {
       meta     : meta,
       gauges   : gauges,
       timers   : timers,
+      sets     : sets,
     }
 
     // now emit these on the nextTick
@@ -119,9 +131,10 @@ function createStatsServer(opts, callback) {
 
     // reset the current stats
     counters = {}
-    timers = {}
-    // Note: gauges are not reset!
-    meta = {
+    timers   = {}
+    gauges   = {}
+    sets     = {}
+    meta     = {
       received : 0,
       bad      : 0,
     }
