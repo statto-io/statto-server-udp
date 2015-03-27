@@ -81,7 +81,7 @@ function createStatsServer(opts, callback) {
 
     var type = parts[0]
     var key  = parts[1]
-    var val  = type === 's' ? parts[2] : parseInt(parts[2], 10)
+    var val  = type === 's' ? parts[2] : parts[2]|0
 
     counters['statto.msgs.total']++
     if ( type in TYPES ) {
