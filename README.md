@@ -25,8 +25,14 @@ var stattoServer = statto(opts, function(err, port) {
   console.log('Stats server is listening on port %s', port)
 })
 
-stattoServer.on('stats', function(timestamp, stats) {
-  console.log('timestamp :', timestamp)
+stattoServer.on('stats', function(stats) {
+  // includes keys such as:
+  // * ts       - string: this period's timestamp
+  // * info     - object: containing pid and host(name)
+  // * counters - object: containing all counters in this period
+  // * gauages  - object: containing all gauges in this period
+  // * timers   - object: containing all timers in this period
+  // * sets     - object: containing all sets in this period
   console.log('stats :', stats)
 })
 ```

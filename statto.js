@@ -6,8 +6,16 @@
 var util = require('util')
 var dgram = require('dgram')
 var events = require('events')
+var os = require('os')
 
 // --------------------------------------------------------------------------------------------------------------------
+
+var TYPES = {
+  c : true,
+  g : true,
+  t : true,
+  s : true,
+}
 
 function getPeriod(interval) {
   var period = Math.floor(Date.now() / interval) * interval
@@ -27,6 +35,10 @@ function createStatsServer(opts, callback) {
 
   var port     = opts.port     || 9526
   var interval = opts.interval || 15 * 1000 // default: 15s
+  var info = {
+    pid : process.pid,
+    host : os.hostname(),
+  }
 
   // to emit 'stats' messages
   var ee = new events.EventEmitter()
@@ -35,14 +47,15 @@ function createStatsServer(opts, callback) {
   var currentPeriod
   
   // this is the data we'll use for this server
-  var counters = {}
+  var counters = {
+    'statto.packets.total' : 0,
+    'statto.msgs.total'    : 0,
+    'statto.msgs.good'     : 0,
+    'statto.msgs.bad'      : 0,
+  }
   var timers   = {}
   var gauges   = {}
   var sets     = {}
-  var meta = {
-    received : 0,
-    bad      : 0,
-  }
 
   var server = dgram.createSocket('udp4')
 
@@ -56,7 +69,7 @@ function createStatsServer(opts, callback) {
     ee.emit('debug', util.format('Received %d bytes from %s:%d', msg.length, rinfo.address, rinfo.port))
 
     // some meta stats
-    meta.received++
+    counters['statto.packets.total']++
 
     // ToDo: convert op into multiple ops if string contains "\n"
     var op = msg.toString()
@@ -68,11 +81,15 @@ function createStatsServer(opts, callback) {
 
     var type = parts[0]
     var key  = parts[1]
-    var val = type === 's' ? parts[2] : parseInt(parts[2], 10)
+    var val  = type === 's' ? parts[2] : parseInt(parts[2], 10)
 
-    // if there is no key, log it as bad
-    if ( !key ) {
-      return meta.bad++
+    counters['statto.msgs.total']++
+    if ( type in TYPES ) {
+      counters['statto.msgs.good']++
+    }
+    else {
+      counters['statto.msgs.bad']++
+      return
     }
 
     if ( type === 'c' ) {
@@ -104,8 +121,7 @@ function createStatsServer(opts, callback) {
       sets[key][val] += 1
     }
     else {
-      // ee.emit('bad', op)
-      meta.bad++
+      throw new Error('Program error, unknown type ' + type)
     }
   })
 
@@ -115,29 +131,31 @@ function createStatsServer(opts, callback) {
 
   function flush() {
     // remember the last period and the stats
-    var lastPeriodStr = currentPeriod.toISOString()
+    var ts = currentPeriod.toISOString()
     var lastStats = {
       counters : counters,
-      meta     : meta,
       gauges   : gauges,
       timers   : timers,
       sets     : sets,
+      info     : info,
+      ts       : ts,
     }
 
     // now emit these on the nextTick
     process.nextTick(function() {
-      ee.emit('stats', lastPeriodStr, lastStats)
+      ee.emit('stats', lastStats)
     })
 
     // reset the current stats
-    counters = {}
+    counters = {
+      'statto.packets.total' : 0,
+      'statto.msgs.total'    : 0,
+      'statto.msgs.good'     : 0,
+      'statto.msgs.bad'      : 0,
+    }
     timers   = {}
     gauges   = {}
     sets     = {}
-    meta     = {
-      received : 0,
-      bad      : 0,
-    }
 
     // set the new currentPeriod
     currentPeriod = getPeriod(interval)
