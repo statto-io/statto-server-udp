@@ -141,44 +141,7 @@ function createStatsServer(opts, callback) {
       ts       : ts,
     }
 
-    // process some lastStats so the backends don't have to
-    var timerKeys = Object.keys(lastStats.timers)
-    timerKeys.forEach(function(timer) {
-      // see if we have any data
-      if ( lastStats.timers[timer].length === 0 ) {
-        lastStats.timers[timer] = {}
-      }
-
-      // yes, got some timings, sort them first
-      var times = lastStats.timers[timer].sort(function(a, b) { return a - b })
-
-      // calculate some stats per timer
-      var data = {
-        sum   : times.reduce(function(a, b) { return a + b }),
-        count : times.length,
-        min   : times[0],
-        max   : times[times.length-1],
-        times : times,
-      }
-      data.mean = data.sum / data.count
-
-      // find the median
-      var middle = Math.floor(data.count/2)
-      // take the middle value, or the average of the middle two
-      var median = (data.count % 2) ? times[middle] : (times[middle-1] + times[middle])/2
-      data.median = median
-
-      // find the standard deviation
-      var sumOfDiffs = 0
-      for (var i = 0; i < data.count; i++) {
-        sumOfDiffs += (times[i] - data.mean) * (times[i] - data.mean)
-      }
-      data.std = Math.sqrt(sumOfDiffs / data.count)
-
-      lastStats.timers[timer] = data
-    })
-
-    // now emit these on the nextTick
+    // emit these on the nextTick
     process.nextTick(function() {
       ee.emit('stats', lastStats)
     })
