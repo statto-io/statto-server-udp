@@ -53,8 +53,8 @@ function createStatsServer(opts, callback) {
     'statto.msgs.good'     : 0,
     'statto.msgs.bad'      : 0,
   }
-  var timers   = {}
   var gauges   = {}
+  var timers   = {}
   var sets     = {}
 
   var server = dgram.createSocket('udp4')
@@ -71,58 +71,78 @@ function createStatsServer(opts, callback) {
     // some meta stats
     counters['statto.packets.total']++
 
-    // ToDo: convert op into multiple ops if string contains "\n"
-    var op = msg.toString()
-    op = op.replace(/\n$/, '')
-    ee.emit('debug', 'Op = ' + op)
+    // for each command in this message
+    var str = msg.toString().replace(/\n+$/, '')
+    var commands = str.split("\n")
 
-    // see what type of message this is:
-    var parts = op.split(/:/)
+    commands.forEach(function(op) {
+      ee.emit('debug', 'Op = ' + op)
 
-    var type = parts[0]
-    var key  = parts[1]
-    var val  = type === 's' ? parts[2] : parts[2]|0
+      // see what type of message this is:
+      var parts = op.split(/:/)
 
-    counters['statto.msgs.total']++
-    if ( type in TYPES ) {
-      counters['statto.msgs.good']++
-    }
-    else {
-      counters['statto.msgs.bad']++
-      return
-    }
+      if ( parts.length !== 3 ) {
+        counters['statto.msgs.total']++
+        counters['statto.msgs.bad']++
+        if ( !sets['statto.bad'] ) {
+          sets['statto.bad'] = {}
+        }
+        if ( sets['statto.bad'][parts.join(':')] ) {
+          // add one
+          sets['statto.bad'][parts.join(':')] += 1
+        }
+        else {
+          // initialise with one
+          sets['statto.bad'][parts.join(':')] = 1
+        }
+        return
+      }
 
-    if ( type === 'c' ) {
-      // this is a counter
-      if ( !counters[key] ) {
-        counters[key] = 0
+      var type = parts[0]
+      var key  = parts[1]
+      var val  = type === 's' ? parts[2] : parts[2]|0
+
+      counters['statto.msgs.total']++
+      if ( type in TYPES ) {
+        counters['statto.msgs.good']++
       }
-      counters[key] += val
-    }
-    else if ( type === 'g' ) {
-      // gauge
-      gauges[key] = val
-    }
-    else if ( type === 't' ) {
-      // timer
-      if ( !timers[key] ) {
-        timers[key] = []
+      else {
+        counters['statto.msgs.bad']++
+        return
       }
-      timers[key].push(val)
-    }
-    else if ( type === 's' ) {
-      // set
-      if ( !sets[key] ) {
-        sets[key] = {}
+
+      if ( type === 'c' ) {
+        // this is a counter
+        if ( !counters[key] ) {
+          counters[key] = 0
+        }
+        counters[key] += val
       }
-      if ( !sets[key][val] ) {
-        sets[key][val] = 0
+      else if ( type === 'g' ) {
+        // gauge
+        gauges[key] = val
       }
-      sets[key][val] += 1
-    }
-    else {
-      throw new Error('Program error, unknown type ' + type)
-    }
+      else if ( type === 't' ) {
+        // timer
+        if ( !timers[key] ) {
+          timers[key] = []
+        }
+        timers[key].push(val)
+      }
+      else if ( type === 's' ) {
+        // set
+        if ( !sets[key] ) {
+          sets[key] = {}
+        }
+        if ( !sets[key][val] ) {
+          sets[key][val] = 0
+        }
+        sets[key][val] += 1
+      }
+      else {
+        throw new Error('Program error, unknown type ' + type)
+      }
+    })
   })
 
   server.bind(port, function() {
@@ -153,8 +173,8 @@ function createStatsServer(opts, callback) {
       'statto.msgs.good'     : 0,
       'statto.msgs.bad'      : 0,
     }
-    timers   = {}
     gauges   = {}
+    timers   = {}
     sets     = {}
 
     // set the new currentPeriod
