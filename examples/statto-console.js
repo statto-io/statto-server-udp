@@ -9,7 +9,7 @@ var stattoServer = statto(opts, function(err, port) {
   console.log('Stats server is listening on port %s', port)
 })
 
-stattoServer.on('stats', function(timestamp, stats) {
-  console.log('--- %s ---', timestamp)
+stattoServer.on('stats', function(stats) {
+  console.log('--- %s ---', stats.ts)
   console.log(JSON.stringify(stats, null, 2))
 })

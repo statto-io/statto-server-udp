@@ -1,7 +1,7 @@
 {
   "name": "statto",
   "description": "A statsd-like library (not daemon) - easier to configure and run.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "statto.js",
   "dependencies": {},
   "devDependencies": {},

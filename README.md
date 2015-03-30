@@ -37,13 +37,57 @@ stattoServer.on('stats', function(stats) {
 })
 ```
 
-Then run the program and in another window, run this a few times (simulating when new accounts are created):
+Then run the program and in another window, run these commands a few times each (simulating when new accounts are
+created or deleted):
 
 ```sh
-$ echo "c:account.new:1" | nc -u -w0 127.0.0.1 9526
+echo "c:account.created:1" | nc -u -w0 127.0.0.1 9526
+echo "c:account.deleted:1" | nc -u -w0 127.0.0.1 9526
 ```
 
 See the output get logged every 15 seconds.
+
+Some other stats could be:
+
+```sh
+# Counters: web and api hits
+echo "c:web.hit:1" | nc -u -w0 127.0.0.1 9526
+echo "c:api.hit:1" | nc -u -w0 127.0.0.1 9526
+
+# Gauge: free memory
+echo "g:memory.free:1321340928" | nc -u -w0 127.0.0.1 9526
+
+# Timer: request duration
+echo "t:request.duration:94" | nc -u -w0 127.0.0.1 9526
+echo "t:request.duration:81" | nc -u -w0 127.0.0.1 9526
+echo "t:request.duration:89" | nc -u -w0 127.0.0.1 9526
+
+# Set: unique IPs
+echo "s:ip-address:192.168.0.1" | nc -u -w0 127.0.0.1 9526
+```
+
+## Multiple Stats ##
+
+Stats can be sent at once using a newline delimiter
+
+```sh
+$ echo "t:request.duration:94
+c:api.hit:1
+g:memory.free:1321340928" | nc -u -w0 127.0.0.1 9526
+```
+
+Or just use `\n` in your strings in whatever programming language you are using.
+
+## Examples ##
+
+Run the example from the repo like:
+
+```sh
+node examples/statto-console.js
+Stats server is listening on port 9526
+```
+
+Then fire some stats at it as above.
 
 ## Differences to Statsd ##
 
