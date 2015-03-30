@@ -96,7 +96,32 @@ Then fire some stats at it as above.
 * you can write whatever backend you want, right there
 * configure however you like just by passing options to the server
 
+## See Also ##
+
+Since statto is a stats framework, this repo only contains the collector and it only emits the raw stats. The following
+repos help process and view them:
+
+* http://npm.im/statto-merge
+* http://npm.im/statto-process
+* http://npm.im/statto-backend-leveldb
+
 ## ChangeLog ##
+
+### 0.3.0 (2015-03-30) ###
+
+* [NEW] Just output the raw stats which haven't had anay processing done on them
+* [NEW] Add ability to process multiple stats in one packet
+* [FIX] Fix count of packets and ops (good, bad, etc)
+* [NEW] Add sets and stats related to each set
+* [NEW] Add stats related to each timer
+* [FIX] Make sure last field is a number (for non-sets)
+* [NEW] Include meta, ts and info in the stats
+
+### 0.1.0 (2015-03-22) ###
+
+* [FIX] Increment bad ops if key not given
+* [NEW] Allow new opts object in constructor
+* [NEW] Allow optional callback to constructor
 
 ### 0.1.0 (2015-03-22) ###
 
